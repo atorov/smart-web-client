@@ -1,0 +1,35 @@
+{
+  "name": "smart-web-client",
+  "version": "0.0.1-SNAPSHOT",
+  "description": "Simple SMART on FHIR web client",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/atorov/smart-web-client.git"
+  },
+  "author": "atorov",
+  "license": "MIT",
+  "scripts": {
+    "build": "rm -rf ./dist && NODE_ENV=development webpack && NODE_ENV=production webpack",
+    "lint": "eslint --ext .js src/",
+    "prestart": "eslint --ext .js src/",
+    "start": "nodemon --watch webpack.*.js --exec \"NODE_ENV=development webpack-dev-server\""
+  },
+  "pre-commit": [
+    "lint"
+  ],
+  "devDependencies": {
+    "@babel/core": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "babel-loader": "^8.0.6",
+    "core-js": "^3.1.4",
+    "eslint": "^6.1.0",
+    "eslint-config-airbnb-base": "^13.2.0",
+    "eslint-plugin-import": "^2.18.2",
+    "nodemon": "^1.19.1",
+    "regenerator-runtime": "^0.13.3",
+    "webpack": "^4.39.1",
+    "webpack-cli": "^3.3.6",
+    "webpack-dev-server": "^3.7.2",
+    "whatwg-fetch": "^3.0.0"
+  }
+}
