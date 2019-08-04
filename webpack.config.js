@@ -1,6 +1,8 @@
 const path = require('path')
 const webpack = require('webpack')
 
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+
 const NODE_MODULES = path.resolve(__dirname, 'node_modules')
 const EXTERNALS = path.resolve(__dirname, 'externals')
 const STORAGE = path.resolve(__dirname, '__storage__')
@@ -10,15 +12,11 @@ const SRC = path.resolve(__dirname, 'src')
 
 const { NODE_ENV } = process.env
 const MODE = NODE_ENV !== 'development' ? 'production' : 'development'
-process.env.BABEL_ENV = MODE
 
-console.log('::: ::: :::')
 console.log('::: MODE:', MODE)
-console.log('::: ::: :::')
 
 module.exports = {
     mode: MODE,
-
     entry: {
         'smart-web-client': [
             'core-js/stable',
@@ -27,38 +25,30 @@ module.exports = {
             SRC,
         ],
     },
-
     output: {
-        filename: `[name]${MODE === 'production' ? '.min' : ''}.js`,
+        filename: '[name].min.js',
         library: 'SMART_WEB_CLIENT',
-        libraryTarget: 'window',
+        libraryTarget: 'var',
     },
-
     devtool: 'source-map',
-
     module: {
         rules: [
             {
                 test: /\.js$/,
                 include: SRC,
                 exclude: EXCLUDE_DEFAULT,
-                use: {
-                    loader: 'babel-loader',
-                },
+                use: { loader: 'babel-loader' },
             },
         ],
     },
-
     plugins: [
         new webpack.WatchIgnorePlugin(EXCLUDE_DEFAULT),
-
         new webpack.DefinePlugin({
-            MODE,
+            MODE: JSON.stringify(MODE),
             'process.env.NODE_ENV': JSON.stringify(NODE_ENV),
         }),
-
+        new HtmlWebpackPlugin(),
     ],
-
     devServer: {
         stats: 'errors-only',
         watchOptions: {

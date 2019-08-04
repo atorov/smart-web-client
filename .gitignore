@@ -40,9 +40,7 @@ jspm_packages
 # Custom
 __storage__
 .DS_Store
-build
-dist
-docs
 .idea/
-stats.json
 .tmp
+dist
+stats.json

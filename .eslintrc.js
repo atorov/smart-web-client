@@ -6,10 +6,6 @@ module.exports = {
   extends: [
     'airbnb-base',
   ],
-  globals: {
-    Atomics: 'readonly',
-    SharedArrayBuffer: 'readonly',
-  },
   parserOptions: {
     ecmaVersion: 2018,
     sourceType: 'module',
@@ -41,5 +37,10 @@ module.exports = {
     'semi-style': ['error', 'first'],
 
     // 'babel/allowImportExportEverywhere': 0,
+  },
+  globals: {
+    Atomics: 'readonly',
+    MODE: 'readonly',
+    SharedArrayBuffer: 'readonly',
   },
 };
