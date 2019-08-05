@@ -5,11 +5,15 @@ import getURLParameter from './lib/get-url-parameter'
 
 export default async function smartWebClient({ debug, delay = 1, onChange } = {}) {
     const clientState = {
-        // clientId: '', // * Required for web apps
-        // fhirBaseURL: '', // * Required
-        // launchContextId: '', // Optional
-        // scope: '', // * Required
-        // sessionKey: '', // * Required
+        // authURL        : string * Required
+        // clientId       : string * Required (for web apps)
+        // fhirBaseURL    : string * Required
+        // launchContextId: string - Optional
+        // launchURL      : string * Required
+        // scope          : string * Required
+        // sessionKey     : string * Required
+        // redirectURL    : string * Required
+        // tokenURL       : string * Required
     }
 
     // -------------------------------------------------------------------------
@@ -101,10 +105,10 @@ export default async function smartWebClient({ debug, delay = 1, onChange } = {}
             conformanceRequestURL = `${clientState.fhirBaseURL}/metadata`
             debug && console.log('::: conformanceRequestURL:', conformanceRequestURL)
 
-            // ---------------------------------------------------------------------
+            // -----------------------------------------------------------------
             // Request the conformance statement from the SMART on FHIR API server
-            // `/.well-known/smart-configuration.json` endpoint
-            // ---------------------------------------------------------------------
+            // `/metadata` endpoint
+            // -----------------------------------------------------------------
             try {
                 conformanceStatementResponse = await fetch(conformanceRequestURL)
                 conformanceStatement = await conformanceStatementResponse.json()
@@ -116,163 +120,108 @@ export default async function smartWebClient({ debug, delay = 1, onChange } = {}
             }
             hasConformanceStatement = conformanceStatementResponse && conformanceStatementResponse.status >= 200 && conformanceStatementResponse.status < 300 && conformanceStatement
             if (!hasConformanceStatement) {
-                throw new Error(':ERROR:CONFORMANCE_STATEMENT_REQUEST:')
+                throw new Error(':ERROR:LAUNCH:CONFORMANCE_STATEMENT:')
             }
         }
 
         debug && await asyncDelay(delay)
         debug && console.log('::: conformanceStatement:', conformanceStatement)
+
+        // ---------------------------------------------------------------------
+        // Authorization URL
+        // ---------------------------------------------------------------------
+        let authURL = ''
+        if (conformanceStatement && Array.isArray(conformanceStatement.rest) && conformanceStatement.rest[0] && conformanceStatement.rest[0].security && Array.isArray(conformanceStatement.rest[0].security.extension)) {
+            const smartExtension = conformanceStatement.rest[0].security.extension.filter(extension => extension.url === 'http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris')
+            if (Array.isArray(smartExtension) && smartExtension[0] && Array.isArray(smartExtension[0].extension)) {
+                smartExtension[0].extension.forEach((extension) => {
+                    if (extension.url === 'authorize') {
+                        authURL = extension.valueUri
+                    }
+                })
+            }
+        }
+
+        if (!authURL) {
+            throw new Error(':ERROR:LAUNCH:AUTH_URL:')
+        }
+        clientState.authURL = authURL
+        debug && await asyncDelay(delay)
+        debug && console.log('::: authURL:', clientState.authURL)
+        onChange && onChange(clientState)
+
+        // ---------------------------------------------------------------------
+        // Token URL
+        // ---------------------------------------------------------------------
+        let tokenURL = ''
+        if (conformanceStatement && Array.isArray(conformanceStatement.rest) && conformanceStatement.rest[0] && conformanceStatement.rest[0].security && Array.isArray(conformanceStatement.rest[0].security.extension)) {
+            const smartExtension = conformanceStatement.rest[0].security.extension.filter(extension => extension.url === 'http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris')
+            if (Array.isArray(smartExtension) && smartExtension[0] && Array.isArray(smartExtension[0].extension)) {
+                smartExtension[0].extension.forEach((extension) => {
+                    if (extension.url === 'token') {
+                        tokenURL = extension.valueUri
+                    }
+                })
+            }
+        }
+
+        if (!tokenURL) {
+            throw new Error(':ERROR:LAUNCH:TOKEN_URL:')
+        }
+        clientState.tokenURL = tokenURL
+        debug && await asyncDelay(delay)
+        debug && console.log('::: tokenURL:', clientState.tokenURL)
+        onChange && onChange(clientState)
+
+        // ---------------------------------------------------------------------
+        // Construct the launch URL by taking the base of the current URL
+        // ---------------------------------------------------------------------
+        clientState.launchURL = `${window.location.protocol}//${window.location.host}${window.location.pathname}`
+        debug && await asyncDelay(delay)
+        debug && console.log('::: launchURL:', clientState.launchURL)
+        onChange && onChange(clientState)
+
+        // ---------------------------------------------------------------------
+        // Construct the redirect URL by taking the base of the current URL
+        // and replace `launch.html` with `index.html`
+        // ---------------------------------------------------------------------
+        clientState.redirectURL = clientState.launchURL.replace('launch.html', 'index.html')
+        debug && await asyncDelay(delay)
+        debug && console.log('::: redirectURL:', clientState.redirectURL)
+        onChange && onChange(clientState)
+
+        // ---------------------------------------------------------------------
+        // Persist client state in the session storage for later use
+        // ---------------------------------------------------------------------
+        try {
+            sessionStorage.setItem(clientState.sessionKey, JSON.stringify(clientState))
+        }
+        catch (reason) {
+            console.error('::: Reason:', reason)
+            throw new Error(':ERROR:LAUNCH:PERSIST_CLIENT_STATE:')
+        }
+        debug && await asyncDelay(delay)
+        console.log('::: Persist client state: DONE!')
+
+        // ---------------------------------------------------------------------
+        // Redirect to the authorization server
+        // and pass needed parameters for the authorization request in the URL
+        // ---------------------------------------------------------------------
+        const _clientId = clientState.clientId
+        const _scope = clientState.scope
+        const _redirectURI = clientState.redirectURL
+        const _aud = clientState.fhirBaseURL
+        let href = `${clientState.authURL}?response_type=code&client_id=${_clientId}&scope=${_scope}&redirect_uri=${_redirectURI}&aud=${_aud}&state=${clientState.sessionKey}`
+        clientState.launchContextId && (href += `&launch=${clientState.launchContextId}`)
+        debug && await asyncDelay(delay)
+        console.log('::: Redirecting to the auth server ...')
+        window.location.href = href
     }
 
+    else {
+        // TODO:
+    }
 
-    // // ---------------------------------------------------------------------------
-    // // Find out the endpoint URLs for the authorization server
-    // document.querySelector('#auth-endpoints').style.display = 'block'
-
-    // await(window.cfg.DEBUG && window.lib.delay())
-    // let authURL = ''
-    // let tokenURL = ''
-    // if (conformanceStatement && Array.isArray(conformanceStatement.rest) && conformanceStatement.rest[0] && conformanceStatement.rest[0].security && Array.isArray(conformanceStatement.rest[0].security.extension)) {
-    //     const smartExtension = conformanceStatement.rest[0].security.extension.filter(extension => extension.url === 'http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris')
-    //     if (Array.isArray(smartExtension) && smartExtension[0] && Array.isArray(smartExtension[0].extension)) {
-    //         smartExtension[0].extension.forEach((extension) => {
-    //             if (extension.url === 'authorize') {
-    //                 authURL = extension.valueUri
-    //             }
-    //             else if (extension.url === 'token') {
-    //                 tokenURL = extension.valueUri
-    //             }
-    //         })
-    //     }
-    // }
-    // console.log('::: authURL:', authURL)
-    // console.log('::: tokenURL:', tokenURL)
-
-    // document.querySelector('#auth-endpoints-icon').classList.remove('fa-spinner')
-    // document.querySelector('#auth-endpoints-icon').classList.remove('fa-spin')
-    // if (authURL && tokenURL) {
-    //     document.querySelector('#auth-endpoints').classList.remove('w3-light-grey')
-    //     document.querySelector('#auth-endpoints').classList.add('w3-light-green')
-    //     document.querySelector('#auth-endpoints-icon').classList.add('fa-check')
-    //     document.querySelector('#auth-endpoints-value').innerHTML = `
-    //   <br />
-    //   <span>${authURL}</span>
-    //   <br />
-    //   <span>${tokenURL}</span>
-    // `
-    // }
-    // else {
-    //     document.querySelector('#auth-endpoints').classList.remove('w3-light-grey')
-    //     document.querySelector('#auth-endpoints').classList.add('w3-red')
-    //     document.querySelector('#auth-endpoints-icon').classList.add('fa-times')
-    //     document.querySelector('#auth-endpoints-message').style.display = 'block'
-    //     document.querySelector('#auth-endpoints-message').innerHTML = '<em>Can not find out the endpoint URLs for the authorization server!</em>'
-    //     scrollTo(0, document.body.scrollHeight)
-
-    //     return ':ERROR:'
-    // }
-    // scrollTo(0, document.body.scrollHeight)
-
-    // // ---------------------------------------------------------------------------
-    // // Construct the launch URL by taking the base of the current URL
-    // document.querySelector('#launch-url').style.display = 'block'
-
-    // await(window.cfg.DEBUG && window.lib.delay())
-    // const launchURL = `${location.protocol}//${location.host}${location.pathname}`
-    // console.log('::: launchURL:', launchURL)
-
-    // document.querySelector('#launch-url').classList.remove('w3-light-grey')
-    // document.querySelector('#launch-url').classList.add('w3-light-green')
-    // document.querySelector('#launch-url-icon').classList.remove('fa-spinner')
-    // document.querySelector('#launch-url-icon').classList.remove('fa-spin')
-    // document.querySelector('#launch-url-icon').classList.add('fa-check')
-    // document.querySelector('#launch-url-value').innerHTML = '' + launchURL
-    // scrollTo(0, document.body.scrollHeight)
-
-    // // ---------------------------------------------------------------------------
-    // // Construct the redirect URL by taking the base of the current URL
-    // // and replace `launch.html` with `index.html`
-    // document.querySelector('#redirect-url').style.display = 'block'
-
-    // await(window.cfg.DEBUG && window.lib.delay())
-    // const redirectURL = launchURL.replace('launch.html', 'index.html')
-    // console.log('::: redirectURL:', redirectURL)
-
-    // document.querySelector('#redirect-url').classList.remove('w3-light-grey')
-    // document.querySelector('#redirect-url').classList.add('w3-light-green')
-    // document.querySelector('#redirect-url-icon').classList.remove('fa-spinner')
-    // document.querySelector('#redirect-url-icon').classList.remove('fa-spin')
-    // document.querySelector('#redirect-url-icon').classList.add('fa-check')
-    // document.querySelector('#redirect-url-value').innerHTML = '' + redirectURL
-    // scrollTo(0, document.body.scrollHeight)
-
-    // // ---------------------------------------------------------------------------
-    // // Retain a couple parameters in the session for later use
-    // document.querySelector('#retain-params').style.display = 'block'
-
-    // let isRetainParamsSuccessful
-    // await(window.cfg.DEBUG && window.lib.delay())
-    // try {
-    //     const params = {
-    //         clientId,
-    //         serviceUri: fhirBaseURL,
-    //         redirectUri: redirectURL,
-    //         tokenUri: tokenURL
-    //     }
-    //     secret && (params.secret = secret)
-    //     window.sessionStorage.setItem(sessionKey, window.JSON.stringify(params))
-    //     isRetainParamsSuccessful = true
-    // }
-    // catch (reason) {
-    //     console.error('::: Reason:', reason)
-    //     isRetainParamsSuccessful = false
-    // }
-    // console.log('::: isRetainParamsSuccessful:', isRetainParamsSuccessful)
-
-    // document.querySelector('#retain-params-icon').classList.remove('fa-spinner')
-    // document.querySelector('#retain-params-icon').classList.remove('fa-spin')
-    // if (isRetainParamsSuccessful) {
-    //     document.querySelector('#retain-params').classList.remove('w3-light-grey')
-    //     document.querySelector('#retain-params').classList.add('w3-light-green')
-    //     document.querySelector('#retain-params-icon').classList.add('fa-check')
-    //     document.querySelector('#retain-params-value').innerHTML = 'Done'
-    // }
-    // else {
-    //     document.querySelector('#retain-params').classList.remove('w3-light-grey')
-    //     document.querySelector('#retain-params').classList.add('w3-red')
-    //     document.querySelector('#retain-params-icon').classList.add('fa-times')
-    //     document.querySelector('#retain-params-message').style.display = 'block'
-    //     document.querySelector('#retain-params-message').innerHTML = '<em>Can not retain parameters in the session storage!</em>'
-    //     scrollTo(0, document.body.scrollHeight)
-
-    //     return ':ERROR:'
-    // }
-    // scrollTo(0, document.body.scrollHeight)
-
-    // // ---------------------------------------------------------------------------
-    // // Redirect the browser to the authorization server
-    // // and pass the needed parameters for the authorization request in the URL
-    // document.querySelector('#redirect-to-auth').style.display = 'block'
-
-    // await(window.cfg.DEBUG && window.lib.delay())
-    // const _clientId = window.encodeURIComponent(clientId)
-    // const _scope = window.encodeURIComponent(scope)
-    // const _redirectURI = window.encodeURIComponent(redirectURL)
-    // const _aud = window.encodeURIComponent(fhirBaseURL)
-    // let href = `${authURL}?response_type=code&client_id=${_clientId}&scope=${_scope}&redirect_uri=${_redirectURI}&aud=${_aud}&state=${sessionKey}`
-    // launchContextId && (href += `&launch=${launchContextId}`)
-    // console.log('::: href:', href)
-
-    // document.querySelector('#redirect-to-auth').classList.remove('w3-light-grey')
-    // document.querySelector('#redirect-to-auth').classList.add('w3-light-green')
-    // document.querySelector('#redirect-to-auth-icon').classList.remove('fa-spinner')
-    // document.querySelector('#redirect-to-auth-icon').classList.remove('fa-spin')
-    // document.querySelector('#redirect-to-auth-icon').classList.add('fa-check')
-    // document.querySelector('#redirect-to-auth-value').innerHTML = `<br /><span>${href}</span>`
-    // scrollTo(0, document.body.scrollHeight)
-
-    // await(window.cfg.DEBUG && window.lib.delay())
-    // window.location.href = href
 
     return {
         clientState,
