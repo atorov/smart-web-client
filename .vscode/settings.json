@@ -5,6 +5,7 @@
         "corejs",
         "devtool",
         "fhir",
+        "openid",
         "plusplus",
         "prestart",
         "stroustrup"

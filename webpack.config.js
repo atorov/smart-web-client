@@ -66,8 +66,9 @@ module.exports = [
             ...config.plugins,
             new webpack.DefinePlugin({
                 'process.env.NODE_ENV': JSON.stringify(NODE_ENV),
-                APP_NAME: JSON.stringify(pkg.name).replace(/['"]+/g, ''),
-                MODE: JSON.stringify(pkg.version),
+                APP_NAME: JSON.stringify(pkg.name),
+                APP_VERSION: JSON.stringify(pkg.version),
+                MODE: JSON.stringify(MODE),
             }),
             new HtmlWebpackPlugin({
                 filename: 'index.html',
@@ -80,13 +81,5 @@ module.exports = [
                 hash: true,
             }),
         ],
-        devServer: {
-            stats: 'errors-only',
-            watchOptions: {
-                aggregateTimeout: 300,
-                poll: 1000,
-                ignored: EXCLUDE_DEFAULT,
-            },
-        },
     },
 ]
