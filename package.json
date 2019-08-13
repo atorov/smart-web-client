@@ -11,7 +11,7 @@
   "scripts": {
     "build": "rm -rf ./dist && webpack",
     "lint": "eslint --ext .js src/",
-    "prestart": "eslint --ext .js src/",
+    "prestart": "npm run lint",
     "serve": "serve ./dist",
     "start": "nodemon --watch webpack.*.js --exec \"NODE_ENV=development webpack-dev-server\""
   },
