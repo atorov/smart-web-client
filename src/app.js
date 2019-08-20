@@ -1,3 +1,5 @@
+import jwtDecode from 'jwt-decode'
+
 import client from './client'
 
 console.log('::: window.SMART_WEB_CLIENT:', window.SMART_WEB_CLIENT)
@@ -97,7 +99,7 @@ function updateUI(clientState) {
     try {
         smart = await client({
             debug: true,
-            delay: 0,
+            delay: 155,
             onChange(clientState) {
                 updateUI(clientState)
             },
@@ -114,7 +116,7 @@ function updateUI(clientState) {
         console.log('::: SMART:', smart)
 
         // ---------------------------------------------------------------------
-        // Construct standard FHIR REST calls to obtain patient resource
+        // Construct a standard FHIR REST call to obtain patient resource
         // with the SMART on FHIR-specific authorization header
         // ---------------------------------------------------------------------
         const patientId = smart.auth && smart.auth.patient
@@ -144,13 +146,65 @@ function updateUI(clientState) {
             return null
         }
 
+        console.log('::: patientResource:', patientResource)
         if (!patientResource) {
             displayItem('exclamation-triangle', '', ':ERROR:APP:PATIENT_RESOURCE:', ':ERROR:')
             return null
         }
 
-        console.log('::: patientResource:', patientResource)
         displayItem('check', 'Patient:', patientResource.id)
+
+        // ---------------------------------------------------------------------
+        // Construct a standard FHIR REST call to obtain provider resource
+        // with the SMART on FHIR-specific authorization header
+        // ---------------------------------------------------------------------
+        let idToken
+        try {
+            idToken = jwtDecode(smart.auth.id_token)
+        }
+        catch (reason) {
+            console.error('::: Reason:', reason)
+            idToken = null
+            displayItem('exclamation-triangle', '', ':ERROR:APP:ID_TOKEN:', ':ERROR:')
+            return null
+        }
+        console.log('::: idToken:', idToken)
+
+        const fhirUser = idToken && idToken.fhirUser
+        console.log('::: fhirUser:', fhirUser)
+
+        if (!fhirUser) {
+            displayItem('exclamation-triangle', '', 'Provider not found', ':WARNING:')
+        }
+        else {
+            // TODO:
+            // const patientRequestURL = `${smart.fhirBaseURL}//Patient/${patientId}`
+            // console.log('::: patientRequestURL:', patientRequestURL)
+
+            // let patientResourceResponse
+            // let patientResource
+            // try {
+            //     patientResourceResponse = await fetch(patientRequestURL, { headers: { Authorization: `Bearer ${smart.auth.access_token}` } })
+            //     if (patientResourceResponse.status >= 200 && patientResourceResponse.status < 300) {
+            //         patientResource = await patientResourceResponse.json()
+            //     }
+            // }
+            // catch (reason) {
+            //     console.error('::: Reason:', reason)
+            //     patientResourceResponse = null
+            //     patientResource = null
+            //     displayItem('exclamation-triangle', '', ':ERROR:APP:PATIENT_RESOURCE_REQUEST:', ':ERROR:')
+            //     return null
+            // }
+
+            // console.log('::: patientResource:', patientResource)
+            // if (!patientResource) {
+            //     displayItem('exclamation-triangle', '', ':ERROR:APP:PATIENT_RESOURCE:', ':ERROR:')
+            //     return null
+            // }
+
+            // displayItem('check', 'Patient:', patientResource.id)
+        }
     }
 
     return null
