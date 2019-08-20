@@ -1,10 +1,10 @@
 {
-  "name": "smart-web-client",
+  "name": "sof-demo-app",
   "version": "0.0.1-SNAPSHOT",
-  "description": "Simple SMART on FHIR web client",
+  "description": "Simple SMART on FHIR web application",
   "repository": {
     "type": "git",
-    "url": "https://github.com/atorov/smart-web-client.git"
+    "url": "https://github.com/atorov/sof-demo-app.git"
   },
   "author": "atorov",
   "license": "MIT",

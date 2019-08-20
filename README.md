@@ -1,3 +1,3 @@
-# smart-web-client
+# sof-demo-app
 
-Simple SMART on FHIR Web Client
+Just a simple SMART on FHIR web application
