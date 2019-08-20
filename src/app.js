@@ -6,8 +6,19 @@ console.log('::: smart-web-client:', client)
 const appContentElement = document.querySelector('#app-content')
 
 function displayItem(icon, title, value, status = ':OK:') {
+    let bgndClass
+    switch (status) {
+        case ':OK:':
+            bgndClass = 'light-green'; break
+        case ':WARNING:':
+            bgndClass = 'orange'; break
+        case ':ERROR:':
+            bgndClass = 'red'; break
+        default:
+            bgndClass = 'light-grey'; break
+    }
     const element = document.createElement('div')
-    element.classList = `w3-container w3-${status === ':OK:' ? 'light-green' : 'red'}`
+    element.classList = `w3-container w3-${bgndClass}`
     element.innerHTML = `
         <p>
             <i class="fas fa-${icon}"></i>
@@ -38,10 +49,10 @@ function updateUI(clientState) {
 
         appContentElement.innerHTML = ''
         ; [
-            ['fhirBaseURL', 'FHIR Base URL(iss)'],
-            ['clientId', 'Client ID'],
-            ['launchContextId', 'Launch Context ID'],
-            ['scope', 'Scope'],
+            ['fhirBaseURL', 'FHIR Base URL (iss)'],
+            ['clientId', 'Client ID (clientId)'],
+            ['launchContextId', 'Launch Context ID (launch)'],
+            ['scope', 'Scope (scope)'],
             ['sessionKey', 'Session Key'],
             ['authURL', 'Authorization URL'],
             ['tokenURL', 'Token URL'],
@@ -66,8 +77,8 @@ function updateUI(clientState) {
 
         appContentElement.innerHTML = ''
         ;[
-            ['sessionKey', 'Session Key'],
-            ['authCode', 'Auth Code'],
+            ['sessionKey', 'Session Key (state)'],
+            ['authCode', 'Auth Code (code)'],
         ].forEach(([key, title]) => {
             if (clientState[key]) {
                 displayItem('check', `${title}:`, clientState[key])
@@ -86,7 +97,7 @@ function updateUI(clientState) {
     try {
         smart = await client({
             debug: true,
-            delay: 550,
+            delay: 0,
             onChange(clientState) {
                 updateUI(clientState)
             },
@@ -102,32 +113,59 @@ function updateUI(clientState) {
     if (smart && smart.stage === ':AUTH_READY:') {
         console.log('::: SMART:', smart)
 
-        //     // ---------------------------------------------------------------------
-        //     // Construct standard FHIR REST calls to obtain patient resource
-        //     // with the SMART on FHIR-specific authorization header
-        //     // ---------------------------------------------------------------------
-        //     const patientId = client.auth.patient
-        //     console.log('::: patientId:', patientId)
+        // ---------------------------------------------------------------------
+        // Construct standard FHIR REST calls to obtain patient resource
+        // with the SMART on FHIR-specific authorization header
+        // ---------------------------------------------------------------------
+        const patientId = smart.auth && smart.auth.patient
+        console.log('::: patientId:', patientId)
 
-        //     // TODO: if (!patientId) return ':ERROR'
+        if (!patientId) {
+            displayItem('exclamation-triangle', '', ':ERROR:APP:PATIENT_ID:', ':ERROR:')
+            return null
+        }
 
-        //     const patientRequestURL = `${client.fhirBaseURL}/Patient/${patientId}`
-        //     console.log('::: patientRequestURL:', patientRequestURL)
+        const patientRequestURL = `${smart.fhirBaseURL}/Patient/${patientId}`
+        console.log('::: patientRequestURL:', patientRequestURL)
 
-        //     let patientResourceResponse
-        //     let patientResource
-        //     try {
-        //         patientResourceResponse = await fetch(patientRequestURL, { headers: { Authorization: `Bearer ${client.auth.access_token}` } })
-        //         patientResource = await patientResourceResponse.json()
-        //     }
-        //     catch (reason) {
-        //         console.error('::: Reason:', reason)
-        //         patientResourceResponse = null
-        //         patientResource = null
-        //     }
-        //     console.log('::: patientResource:', patientResource)
+        let patientResourceResponse
+        let patientResource
+        try {
+            patientResourceResponse = await fetch(patientRequestURL, { headers: { Authorization: `Bearer ${smart.auth.access_token}` } })
+            patientResource = await patientResourceResponse.json()
+        }
+        catch (reason) {
+            console.error('::: Reason:', reason)
+            patientResourceResponse = null
+            patientResource = null
+            displayItem('exclamation-triangle', '', ':ERROR:APP:PATIENT_RESOURCE_REQUEST:', ':ERROR:')
+            return null
+        }
 
-    //     // TODO: if (!patientResource) return ':ERROR'
+        if (!patientResource) {
+            displayItem('exclamation-triangle', '', ':ERROR:APP:PATIENT_RESOURCE:', ':ERROR:')
+            return null
+        }
+
+        let patientResourceString
+        try {
+            patientResourceString = JSON.stringify(patientResource)
+        }
+        catch (reason) {
+            console.error('::: Reason:', reason)
+            patientResourceString = ''
+            displayItem('exclamation-triangle', '', ':ERROR:APP:PATIENT_RESOURCE_STRINGIFY', ':ERROR:')
+            return null
+        }
+
+        if (!patientResourceString) {
+            displayItem('exclamation-triangle', '', ':ERROR:APP:PATIENT_RESOURCE_NOT_AVAILABLE:', ':ERROR:')
+            return null
+        }
+
+        console.log('::: patientResource:', patientResource)
+        console.log('::: patientResourceString:', patientResourceString)
+        displayItem('check', 'Patient', patientResourceString)
     }
 
     return 'TODO:'

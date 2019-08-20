@@ -65,7 +65,7 @@ export default async function smartWebClient({ debug, delay = 1, onChange } = {}
         // ---------------------------------------------------------------------
         clientState.clientId = getURLParameter('clientId') || 'smart-demo-app'
         debug && await asyncDelay(delay)
-        debug && console.log('::: clientId:', clientState.clientId)
+        debug && console.log('::: clientId (clientId):', clientState.clientId)
         onChange && onChange(clientState)
 
         // ---------------------------------------------------------------------
@@ -73,7 +73,7 @@ export default async function smartWebClient({ debug, delay = 1, onChange } = {}
         // ---------------------------------------------------------------------
         clientState.launchContextId = getURLParameter('launch')
         debug && await asyncDelay(delay)
-        debug && console.log('::: launchContextId:', clientState.launchContextId)
+        debug && console.log('::: launchContextId (launch):', clientState.launchContextId)
         onChange && onChange(clientState)
 
         // ---------------------------------------------------------------------
@@ -83,7 +83,7 @@ export default async function smartWebClient({ debug, delay = 1, onChange } = {}
             ? decodeURIComponent(getURLParameter('scope'))
             : 'launch launch/patient launch/encounter patient/*.* openid profile fhirUser'
         debug && await asyncDelay(delay)
-        debug && console.log('::: scope:', clientState.scope)
+        debug && console.log('::: scope (scope):', clientState.scope)
         onChange && onChange(clientState)
 
         // ---------------------------------------------------------------------
