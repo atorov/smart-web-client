@@ -2,11 +2,11 @@ import shortid from 'shortid'
 
 import asyncDelay from './lib/async-delay'
 import getURLParameter from './lib/get-url-parameter'
-// import JSONToURLEncoded from './lib/json-to-url-encoded'
+import JSONToURLEncoded from './lib/json-to-url-encoded'
 
 export default async function smartWebClient({ debug, delay = 1, onChange } = {}) {
-    const clientState = {
-        // Launch
+    let clientState = {
+        // Launch ----------------------------------------
         fhirBaseURL: '', //     string * Required
         clientId: '', //        string * Required (for web apps)
         launchContextId: '', // string - Optional
@@ -17,9 +17,9 @@ export default async function smartWebClient({ debug, delay = 1, onChange } = {}
         launchURL: '', //       string * Required
         redirectURL: '', //     string * Required
 
-
-        // auth           : object * Required
-        // authCode       : string * Required
+        // Auth ------------------------------------------
+        authCode: '', //        string * Required
+        auth: null, //          object * Required
     }
 
     // -------------------------------------------------------------------------
@@ -262,126 +262,126 @@ export default async function smartWebClient({ debug, delay = 1, onChange } = {}
 
     // BEGIN AUTH ==============================================================
     if (sessionKey) {
-    //     // ---------------------------------------------------------------------
-    //     // Set client stage
-    //     // ---------------------------------------------------------------------
-    //     clientState.stage = ':AUTH:'
-    //     debug && await asyncDelay(delay)
-    //     debug && console.log('::: stage:', clientState.stage)
-    //     onChange && onChange(clientState)
+        // ---------------------------------------------------------------------
+        // Set client stage
+        // ---------------------------------------------------------------------
+        clientState.stage = ':AUTH:'
+        debug && await asyncDelay(delay)
+        debug && console.log('::: stage:', clientState.stage)
+        onChange && onChange(clientState)
 
-        //     // ---------------------------------------------------------------------
-        //     // Load the client state stored in the browser session
-        //     // ---------------------------------------------------------------------
-        //     try {
-        //         clientState = {
-        //             ...clientState,
-        //             ...JSON.parse(sessionStorage.getItem(sessionKey)),
-        //         }
-        //     }
-        //     catch (reason) {
-        //         console.warn('::: Reason:', reason)
-        //         throw new Error(':ERROR:AUTH:READ_SESSION_STORAGE:')
-        //     }
+        // ---------------------------------------------------------------------
+        // Load the client state stored in the browser session
+        // ---------------------------------------------------------------------
+        try {
+            clientState = {
+                ...clientState,
+                ...JSON.parse(sessionStorage.getItem(sessionKey)),
+            }
+        }
+        catch (reason) {
+            console.warn('::: Reason:', reason)
+            throw new Error(':ERROR:AUTH:READ_SESSION_STORAGE:')
+        }
 
-        //     if (!clientState.sessionKey || clientState.sessionKey !== sessionKey) {
-        //         throw new Error(':ERROR:AUTH:LOAD_CLIENT_STATE:')
-        //     }
+        if (!clientState.sessionKey || clientState.sessionKey !== sessionKey) {
+            throw new Error(':ERROR:AUTH:LOAD_CLIENT_STATE:')
+        }
 
-        //     debug && await asyncDelay(delay)
-        //     debug && console.log('::: sessionKey (state):', clientState.sessionKey)
-        //     onChange && onChange(clientState)
+        debug && await asyncDelay(delay)
+        debug && console.log('::: sessionKey (state):', clientState.sessionKey)
+        onChange && onChange(clientState)
 
-        //     // ---------------------------------------------------------------------
-        //     // Get `code` parameter received from the authorization server
-        //     // ---------------------------------------------------------------------
-        //     clientState.authCode = getURLParameter('code')
+        // ---------------------------------------------------------------------
+        // Get `code` parameter received from the authorization server
+        // ---------------------------------------------------------------------
+        clientState.authCode = getURLParameter('code')
 
-        //     if (!clientState.authCode) {
-        //         throw new Error(':ERROR:AUTH:AUTH_CODE:')
-        //     }
+        if (!clientState.authCode) {
+            throw new Error(':ERROR:AUTH:AUTH_CODE:')
+        }
 
-        //     debug && await asyncDelay(delay)
-        //     debug && console.log('::: authCode:', clientState.authCode)
-        //     onChange && onChange(clientState)
+        debug && await asyncDelay(delay)
+        debug && console.log('::: authCode:', clientState.authCode)
+        onChange && onChange(clientState)
 
-        //     // ---------------------------------------------------------------------
-        //     // Prepare the token exchange call parameters
-        //     // ---------------------------------------------------------------------
-        //     const options = {
-        //         method: 'POST',
-        //         headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-        //         body: {
-        //             client_id: clientState.clientId,
-        //             code: clientState.authCode,
-        //             grant_type: 'authorization_code',
-        //             redirect_uri: clientState.redirectURL,
-        //         },
-        //     }
-        //     options.body = JSONToURLEncoded(options.body)
-        //     debug && await asyncDelay(delay)
-        //     debug && console.log('::: options:', options)
+        // ---------------------------------------------------------------------
+        // Prepare the token exchange call parameters
+        // ---------------------------------------------------------------------
+        const options = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+            body: {
+                client_id: clientState.clientId,
+                code: clientState.authCode,
+                grant_type: 'authorization_code',
+                redirect_uri: clientState.redirectURL,
+            },
+        }
+        options.body = JSONToURLEncoded(options.body)
+        debug && await asyncDelay(delay)
+        debug && console.log('::: options:', options)
 
-        //     // ---------------------------------------------------------------------
-        //     // Obtain auth data from the authorization service
-        //     // using the authorization code
-        //     // ---------------------------------------------------------------------
-        //     let authResponse
-        //     let auth
-        //     try {
-        //         authResponse = await fetch(clientState.tokenURL, options)
-        //         auth = await authResponse.json()
-        //     }
-        //     catch (reason) {
-        //         console.error('::: Reason:', reason)
-        //         authResponse = null
-        //         auth = null
-        //     }
+        // ---------------------------------------------------------------------
+        // Obtain auth data from the authorization service
+        // using the authorization code
+        // ---------------------------------------------------------------------
+        let authResponse
+        let auth
+        try {
+            authResponse = await fetch(clientState.tokenURL, options)
+            auth = await authResponse.json()
+        }
+        catch (reason) {
+            console.error('::: Reason:', reason)
+            authResponse = null
+            auth = null
+        }
 
-        //     if (!auth) {
-        //         throw new Error(':ERROR:AUTH:AUTH_DATA_REQUEST:')
-        //     }
+        if (!auth) {
+            throw new Error(':ERROR:AUTH:AUTH_DATA_REQUEST:')
+        }
 
-        //     if (!auth.access_token) {
-        //         throw new Error(':ERROR:AUTH:AUTH_TOKEN:')
-        //     }
+        if (!auth.access_token) {
+            throw new Error(':ERROR:AUTH:AUTH_TOKEN:')
+        }
 
-        //     clientState.auth = auth
-        //     debug && await asyncDelay(delay)
-        //     debug && console.log('::: auth:', clientState.auth)
-        //     onChange && onChange(clientState)
+        clientState.auth = auth
+        debug && await asyncDelay(delay)
+        debug && console.log('::: auth:', clientState.auth)
+        onChange && onChange(clientState)
 
-        //     // ---------------------------------------------------------------------
-        //     // Persist the updated client state in the session storage for later use
-        //     // ---------------------------------------------------------------------
-        //     const data = { ...clientState }
-        //     delete data.stage
+        // ---------------------------------------------------------------------
+        // Persist the updated client state in the session storage for later use
+        // ---------------------------------------------------------------------
+        const data = { ...clientState }
+        delete data.stage
 
-        //     try {
-        //         sessionStorage.setItem(clientState.sessionKey, JSON.stringify(data))
-        //     }
-        //     catch (reason) {
-        //         console.error('::: Reason:', reason)
-        //         throw new Error(':ERROR:AUTH:PERSIST_CLIENT_STATE:')
-        //     }
+        try {
+            sessionStorage.setItem(clientState.sessionKey, JSON.stringify(data))
+        }
+        catch (reason) {
+            console.error('::: Reason:', reason)
+            throw new Error(':ERROR:AUTH:PERSIST_CLIENT_STATE:')
+        }
 
-        //     debug && await asyncDelay(delay)
-        //     console.log('::: Persist client state: DONE!')
+        debug && await asyncDelay(delay)
+        console.log('::: Persist client state: DONE!')
 
-        //     // ---------------------------------------------------------------------
-        //     // Remove URL parameters
-        //     // ---------------------------------------------------------------------
-        //     window.history.replaceState(null, null, window.location.pathname)
-        //     debug && await asyncDelay(delay)
-        //     console.log('::: Remove URL parameters: DONE!')
+        // ---------------------------------------------------------------------
+        // Remove URL parameters
+        // ---------------------------------------------------------------------
+        window.history.replaceState(null, null, window.location.pathname)
+        debug && await asyncDelay(delay)
+        console.log('::: Remove URL parameters: DONE!')
 
-        //     // ---------------------------------------------------------------------
-        //     // Set client stage
-        //     // ---------------------------------------------------------------------
-        //     clientState.stage = ':AUTH_READY:'
-        //     debug && await asyncDelay(delay)
-        //     debug && console.log('::: stage:', clientState.stage)
-        //     onChange && onChange(clientState)
+        // ---------------------------------------------------------------------
+        // Set client stage
+        // ---------------------------------------------------------------------
+        clientState.stage = ':AUTH_READY:'
+        debug && await asyncDelay(delay)
+        debug && console.log('::: stage:', clientState.stage)
+        onChange && onChange(clientState)
 
         // ---------------------------------------------------------------------
         return { ...clientState }
@@ -390,7 +390,5 @@ export default async function smartWebClient({ debug, delay = 1, onChange } = {}
 
     // NO SMART CONTEXT
     // throw new Error(':ERROR:AUTH:SESSION_KEY:')
-    // throw new Error(':ERROR:NO_SMART_CONTEXT:')
-
-    return 'TODO:'
+    throw new Error(':ERROR:NO_SMART_CONTEXT:')
 }
