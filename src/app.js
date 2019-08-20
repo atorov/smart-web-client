@@ -127,7 +127,7 @@ function updateUI(clientState) {
             return null
         }
 
-        const patientRequestURL = `${smart.fhirBaseURL}//Patient/${patientId}`
+        const patientRequestURL = `${smart.fhirBaseURL}/Patient/${patientId}`
         console.log('::: patientRequestURL:', patientRequestURL)
 
         let patientResourceResponse
@@ -155,8 +155,7 @@ function updateUI(clientState) {
         displayItem('check', 'Patient:', patientResource.id)
 
         // ---------------------------------------------------------------------
-        // Construct a standard FHIR REST call to obtain provider resource
-        // with the SMART on FHIR-specific authorization header
+        // Decode `id_token`
         // ---------------------------------------------------------------------
         let idToken
         try {
@@ -170,40 +169,54 @@ function updateUI(clientState) {
         }
         console.log('::: idToken:', idToken)
 
+        // ---------------------------------------------------------------------
+        // Construct a standard FHIR REST call to obtain FHIR user resource
+        // with the SMART on FHIR-specific authorization header
+        // ---------------------------------------------------------------------
         const fhirUser = idToken && idToken.fhirUser
         console.log('::: fhirUser:', fhirUser)
 
         if (!fhirUser) {
-            displayItem('exclamation-triangle', '', 'Provider not found', ':WARNING:')
+            displayItem('exclamation-triangle', '', 'FHIR user not found', ':WARNING:')
         }
         else {
-            // TODO:
-            // const patientRequestURL = `${smart.fhirBaseURL}//Patient/${patientId}`
-            // console.log('::: patientRequestURL:', patientRequestURL)
+            const fhirUserRequestURL = `${smart.fhirBaseURL}/${fhirUser}`
+            console.log('::: fhirUserRequestURL:', fhirUserRequestURL)
 
-            // let patientResourceResponse
-            // let patientResource
-            // try {
-            //     patientResourceResponse = await fetch(patientRequestURL, { headers: { Authorization: `Bearer ${smart.auth.access_token}` } })
-            //     if (patientResourceResponse.status >= 200 && patientResourceResponse.status < 300) {
-            //         patientResource = await patientResourceResponse.json()
-            //     }
-            // }
-            // catch (reason) {
-            //     console.error('::: Reason:', reason)
-            //     patientResourceResponse = null
-            //     patientResource = null
-            //     displayItem('exclamation-triangle', '', ':ERROR:APP:PATIENT_RESOURCE_REQUEST:', ':ERROR:')
-            //     return null
-            // }
+            let fhirUserResourceResponse
+            let fhirUserResource
+            try {
+                fhirUserResourceResponse = await fetch(fhirUserRequestURL, { headers: { Authorization: `Bearer ${smart.auth.access_token}` } })
+                if (fhirUserResourceResponse.status >= 200 && fhirUserResourceResponse.status < 300) {
+                    fhirUserResource = await fhirUserResourceResponse.json()
+                }
+            }
+            catch (reason) {
+                console.error('::: Reason:', reason)
+                fhirUserResourceResponse = null
+                fhirUserResource = null
+            }
 
-            // console.log('::: patientResource:', patientResource)
-            // if (!patientResource) {
-            //     displayItem('exclamation-triangle', '', ':ERROR:APP:PATIENT_RESOURCE:', ':ERROR:')
-            //     return null
-            // }
+            console.log('::: fhirUserResource:', fhirUserResource)
+            if (!fhirUserResource) {
+                displayItem('exclamation-triangle', '', 'FHIR user not found', ':WARNING:')
+            }
+            else {
+                displayItem('check', 'fhirUSer:', fhirUserResource.id)
+            }
+        }
 
-            // displayItem('check', 'Patient:', patientResource.id)
+        // ---------------------------------------------------------------------
+        // Custom app context
+        // ---------------------------------------------------------------------
+        const appContext = idToken && idToken.appContext
+        console.log('::: appContext:', appContext)
+
+        if (!appContext) {
+            displayItem('check', '', 'No custom app context')
+        }
+        else {
+            displayItem('check', '', 'Found custom app context')
         }
     }
 

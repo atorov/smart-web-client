@@ -81,7 +81,7 @@ export default async function smartWebClient({ debug, delay = 1, onChange } = {}
         // ---------------------------------------------------------------------
         clientState.scope = getURLParameter('scope')
             ? decodeURIComponent(getURLParameter('scope'))
-            : 'launch launch/patient launch/encounter patient/*.* openid profile fhirUser'
+            : 'launch launch/patient patient/*.* openid profile fhirUser'
         debug && await asyncDelay(delay)
         debug && console.log('::: scope (scope):', clientState.scope)
         onChange && onChange(clientState)
