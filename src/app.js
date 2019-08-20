@@ -125,14 +125,16 @@ function updateUI(clientState) {
             return null
         }
 
-        const patientRequestURL = `${smart.fhirBaseURL}/Patient/${patientId}`
+        const patientRequestURL = `${smart.fhirBaseURL}//Patient/${patientId}`
         console.log('::: patientRequestURL:', patientRequestURL)
 
         let patientResourceResponse
         let patientResource
         try {
             patientResourceResponse = await fetch(patientRequestURL, { headers: { Authorization: `Bearer ${smart.auth.access_token}` } })
-            patientResource = await patientResourceResponse.json()
+            if (patientResourceResponse.status >= 200 && patientResourceResponse.status < 300) {
+                patientResource = await patientResourceResponse.json()
+            }
         }
         catch (reason) {
             console.error('::: Reason:', reason)
@@ -147,26 +149,9 @@ function updateUI(clientState) {
             return null
         }
 
-        let patientResourceString
-        try {
-            patientResourceString = JSON.stringify(patientResource)
-        }
-        catch (reason) {
-            console.error('::: Reason:', reason)
-            patientResourceString = ''
-            displayItem('exclamation-triangle', '', ':ERROR:APP:PATIENT_RESOURCE_STRINGIFY', ':ERROR:')
-            return null
-        }
-
-        if (!patientResourceString) {
-            displayItem('exclamation-triangle', '', ':ERROR:APP:PATIENT_RESOURCE_NOT_AVAILABLE:', ':ERROR:')
-            return null
-        }
-
         console.log('::: patientResource:', patientResource)
-        console.log('::: patientResourceString:', patientResourceString)
-        displayItem('check', 'Patient', patientResourceString)
+        displayItem('check', 'Patient:', patientResource.id)
     }
 
-    return 'TODO:'
+    return null
 })()
