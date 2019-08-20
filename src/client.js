@@ -153,7 +153,7 @@ export default async function smartWebClient({ debug, delay = 1, onChange } = {}
         // ---------------------------------------------------------------------
         let authURL = ''
         if (conformanceStatement && Array.isArray(conformanceStatement.rest) && conformanceStatement.rest[0] && conformanceStatement.rest[0].security && Array.isArray(conformanceStatement.rest[0].security.extension)) {
-            const smartExtension = conformanceStatement.rest[0].security.extension.filter(extension => extension.url === 'http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris')
+            const smartExtension = conformanceStatement.rest[0].security.extension.filter((extension) => extension.url === 'http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris')
             if (Array.isArray(smartExtension) && smartExtension[0] && Array.isArray(smartExtension[0].extension)) {
                 smartExtension[0].extension.forEach((extension) => {
                     if (extension.url === 'authorize') {
@@ -176,7 +176,7 @@ export default async function smartWebClient({ debug, delay = 1, onChange } = {}
         // ---------------------------------------------------------------------
         let tokenURL = ''
         if (conformanceStatement && Array.isArray(conformanceStatement.rest) && conformanceStatement.rest[0] && conformanceStatement.rest[0].security && Array.isArray(conformanceStatement.rest[0].security.extension)) {
-            const smartExtension = conformanceStatement.rest[0].security.extension.filter(extension => extension.url === 'http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris')
+            const smartExtension = conformanceStatement.rest[0].security.extension.filter((extension) => extension.url === 'http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris')
             if (Array.isArray(smartExtension) && smartExtension[0] && Array.isArray(smartExtension[0].extension)) {
                 smartExtension[0].extension.forEach((extension) => {
                     if (extension.url === 'token') {
