@@ -108,15 +108,16 @@ export default async function smartWebClient({ debug, delay = 1, onChange } = {}
         let conformanceStatementResponse
         let conformanceStatement
         let hasConformanceStatement
-        try {
-            conformanceStatementResponse = await fetch(conformanceRequestURL)
-            conformanceStatement = await conformanceStatementResponse.json()
-        }
-        catch (reason) {
-            console.warn('::: Reason:', reason)
-            conformanceStatementResponse = null
-            conformanceStatement = null
-        }
+        // TODO:
+        // try {
+        //     conformanceStatementResponse = await fetch(conformanceRequestURL)
+        //     conformanceStatement = await conformanceStatementResponse.json()
+        // }
+        // catch (reason) {
+        //     console.warn('::: Reason:', reason)
+        //     conformanceStatementResponse = null
+        //     conformanceStatement = null
+        // }
         hasConformanceStatement = conformanceStatementResponse && conformanceStatementResponse.status >= 200 && conformanceStatementResponse.status < 300 && conformanceStatement
         if (!hasConformanceStatement) {
             // -----------------------------------------------------------------

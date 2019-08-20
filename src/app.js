@@ -164,52 +164,53 @@ function updateUI(clientState) {
         catch (reason) {
             console.error('::: Reason:', reason)
             idToken = null
-            displayItem('exclamation-triangle', '', ':ERROR:APP:ID_TOKEN:', ':ERROR:')
-            return null
+            displayItem('check', '', '`id_token` not found')
         }
         console.log('::: idToken:', idToken)
 
-        // ---------------------------------------------------------------------
-        // Construct a standard FHIR REST call to obtain FHIR user resource
-        // with the SMART on FHIR-specific authorization header
-        // ---------------------------------------------------------------------
-        const fhirUser = idToken && idToken.fhirUser
-        console.log('::: fhirUser:', fhirUser)
+        if (idToken) {
+            // ---------------------------------------------------------------------
+            // Construct a standard FHIR REST call to obtain FHIR user resource
+            // with the SMART on FHIR-specific authorization header
+            // ---------------------------------------------------------------------
+            const fhirUser = idToken && idToken.fhirUser
+            console.log('::: fhirUser:', fhirUser)
 
-        if (!fhirUser) {
-            displayItem('exclamation-triangle', '', 'FHIR user not found', ':WARNING:')
-        }
-        else {
-            const fhirUserRequestURL = `${smart.fhirBaseURL}/${fhirUser}`
-            console.log('::: fhirUserRequestURL:', fhirUserRequestURL)
-
-            let fhirUserResourceResponse
-            let fhirUserResource
-            try {
-                fhirUserResourceResponse = await fetch(fhirUserRequestURL, { headers: { Authorization: `Bearer ${smart.auth.access_token}` } })
-                if (fhirUserResourceResponse.status >= 200 && fhirUserResourceResponse.status < 300) {
-                    fhirUserResource = await fhirUserResourceResponse.json()
-                }
-            }
-            catch (reason) {
-                console.error('::: Reason:', reason)
-                fhirUserResourceResponse = null
-                fhirUserResource = null
-            }
-
-            console.log('::: fhirUserResource:', fhirUserResource)
-            if (!fhirUserResource) {
+            if (!fhirUser) {
                 displayItem('exclamation-triangle', '', 'FHIR user not found', ':WARNING:')
             }
             else {
-                displayItem('check', 'fhirUSer:', fhirUserResource.id)
+                const fhirUserRequestURL = `${smart.fhirBaseURL}/${fhirUser}`
+                console.log('::: fhirUserRequestURL:', fhirUserRequestURL)
+
+                let fhirUserResourceResponse
+                let fhirUserResource
+                try {
+                    fhirUserResourceResponse = await fetch(fhirUserRequestURL, { headers: { Authorization: `Bearer ${smart.auth.access_token}` } })
+                    if (fhirUserResourceResponse.status >= 200 && fhirUserResourceResponse.status < 300) {
+                        fhirUserResource = await fhirUserResourceResponse.json()
+                    }
+                }
+                catch (reason) {
+                    console.error('::: Reason:', reason)
+                    fhirUserResourceResponse = null
+                    fhirUserResource = null
+                }
+
+                console.log('::: fhirUserResource:', fhirUserResource)
+                if (!fhirUserResource) {
+                    displayItem('exclamation-triangle', '', 'FHIR user resource not found', ':WARNING:')
+                }
+                else {
+                    displayItem('check', 'fhirUSer:', fhirUserResource.id)
+                }
             }
         }
 
         // ---------------------------------------------------------------------
         // Custom app context
         // ---------------------------------------------------------------------
-        const appContext = idToken && idToken.appContext
+        const appContext = smart.auth && smart.auth.appContext
         console.log('::: appContext:', appContext)
 
         if (!appContext) {
