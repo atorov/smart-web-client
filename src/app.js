@@ -44,9 +44,12 @@ function updateUI(clientState) {
             ['scope', 'Scope'],
             ['sessionKey', 'Session Key'],
             ['authURL', 'Authorization URL'],
+            ['tokenURL', 'Token URL'],
+            ['launchURL', 'Launch URL'],
+            ['redirectURL', 'Redirect URL'],
         ].forEach(([key, title]) => {
             if (clientState[key]) {
-                displayItem('check', `${title}:`, clientState.fhirBaseURL)
+                displayItem('check', `${title}:`, clientState[key])
             }
         })
     }
