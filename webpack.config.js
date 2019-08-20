@@ -55,11 +55,11 @@ module.exports = [
     {
         ...config,
         entry: {
-            demo: [
+            app: [
                 'core-js/stable',
                 'regenerator-runtime/runtime',
                 'whatwg-fetch',
-                `${SRC}/demo`,
+                `${SRC}/app`,
             ],
         },
         plugins: [

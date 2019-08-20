@@ -4,12 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
     <title>Smart Demo App</title>
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.9.0/css/all.css">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 </head>
 <body>
+    <div id="app-root">
+        <header id="app-header" class="w3-container w3-dark-grey w3-left-align">
+            <h1 class="w3-large">My SMART on FHIR App</h1>
+        </header>
+        <header id="app-sub-header"></header>
+        <div id='app-content'></div>
+    </div>
+
     <noscript>
         You need to enable JavaScript to run this app.
     </noscript>
-    <script src="smart-web-client.js?<%-webpack.hash%>"></script>
+    <script src="https://www.w3schools.com/lib/w3codecolor.js"></script>
+    <!-- <script>
+        w3CodeColor();
+    </script>
+    <script src="smart-web-client.js?<%-webpack.hash%>"></script> -->
 </body>
 </html>
